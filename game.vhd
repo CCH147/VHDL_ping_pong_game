@@ -13,21 +13,20 @@ entity game is
         sw2                                   : in  std_logic;
         LED                                   : out std_logic_vector(7 downto 0);  -- 4-bit 
         seg                                   : out std_logic_vector(6 downto 0);  -- 7seg L分數 (gfedcba) 
-        seg1                                  : out std_logic_vector(6 downto 0)  -- 7seg R分數 (gfedcba) 
+        seg1                                  : out std_logic_vector(6 downto 0)   -- 7seg R分數 (gfedcba) 
         );
 end game;
 
 architecture Behavioral of game is
-    Type state is ( L0,L1,L2,L3,L4,L5,L6,L7,
-                    R0,R1,R2,R3,R4,R5,R6,R7,
-                    Lhit,Rhit,
+    Type state is ( L0,Lhit,
+                    R0,Rhit,
                     Lserve,Rserve,
                     Lwin,Rwin
                    );
     signal current_state         : state;
     signal ping                  : std_logic_vector(7 downto 0);
-    signal divclk                : std_logic_vector(26 downto 0);--定義 除頻 訊號
-    signal fclk                  : std_logic;                    --定義 除頻 clk
+    signal divclk                : std_logic_vector(26 downto 0); --定義 除頻 訊號
+    signal fclk                  : std_logic;                     --定義 除頻 clk
     signal Lscore                : std_logic_vector(3 downto 0);
     signal Rscore                : std_logic_vector(3 downto 0);
     begin
@@ -40,7 +39,8 @@ architecture Behavioral of game is
             divclk <= divclk + 1;
         end if;
     end process FD;  
-    fclk <= divclk(25); --約 2 Hz
+    fclk <= divclk(25);    --約 2 Hz
+    
     
     process(fclk,Rst,sw1,sw2)
     begin
@@ -57,31 +57,22 @@ architecture Behavioral of game is
         elsif ( fclk 'event and fclk = '1') then
             case current_state is
                 when Lserve =>
+                    ping <= "00000001";
                     if sw1 = '1' then 
                         current_state <= L0;
                     end if;
                 when Rserve =>
+                    ping <= "10000000";
                     if sw2 = '1' then
                         current_state <= R0;
-                    end if;
-                when Rhit =>
-                    if sw2 = '1' then
-                        current_state <= R1;
-                    else 
-                        ping <= "00000000";
-                        current_state <= Lwin;
-                    end if;
-                when Lhit =>
-                    if sw1 = '1' then
-                        current_state <= L1;
-                    else 
-                        ping <= "00000000";
-                        current_state <= Rwin;
                     end if;
                 when Lwin =>
                     Lscore <= Lscore + 1;
                     if Lscore = "0011" then
                         ping <= "00001111";
+                        Lscore <= "0000";
+                        Rscore <= "0000";
+                        current_state <= Rserve;
                     else      
                         ping <= "00000000";
                         current_state <= Rserve;
@@ -90,82 +81,43 @@ architecture Behavioral of game is
                     Rscore <= Rscore + 1;
                     if Rscore = "0011" then
                         ping <= "11110000";
+                        Lscore <= "0000";
+                        Rscore <= "0000";
+                        current_state <= Lserve;
                     else
                         ping <= "00000000";
                         current_state <= Lserve;
                     end if;
                 when  L0    =>
-                    ping <= "00000001";
-                    current_state <= L1;
-                when  L1    =>
-                    ping <= "00000010";
-                    current_state <= L2;
-                when  L2    =>
-                    ping <= "00000100";
-                    current_state <= L3;                 
-                when  L3    =>
-                    ping <= "00001000";
-                    current_state <= L4;
-                when  L4   =>
-                    ping <= "00010000";
-                    if sw2 = '1' then
+                    if (ping(7) = '1') then
+                        current_state <= Rhit;
+                    elsif (ping(7) = '0' and sw2 = '1') then
                         current_state <= Lwin;
-                    else
-                        current_state <= L5;
+                    else 
+                        ping <= ping(6 downto 0) & ping(7);
                     end if;
-                when  L5    =>
-                    ping <= "00100000";
+                when Rhit =>
                     if sw2 = '1' then
-                        current_state <= Lwin;
+                        current_state <= R0;
                     else
-                        current_state <= L6;
-                    end if;
-                when  L6    =>
-                    ping <= "01000000";
-                    if sw2 = '1' then
+                        ping <= "00000000";
                         current_state <= Lwin;
-                    else
-                        current_state <= L7;
                     end if;
-                when  L7    =>
-                    ping <= "10000000";
-                    current_state <= Rhit;
                 when  R0    =>
-                    ping <= "10000000";
-                    current_state <= R1;
-                when  R1    =>
-                    ping <= "01000000";
-                    current_state <= R2;
-                when  R2    =>
-                    ping <= "00100000";
-                    current_state <= R3;                 
-                when  R3    =>
-                    ping <= "00010000";
-                    current_state <= R4;
-                when  R4   =>
-                    ping <= "00001000";
-                    if sw1 = '1' then
+                    if (ping(0) = '1') then
+                        current_state <= Lhit;
+                    elsif (ping(0) = '0' and sw1 = '1') then
                         current_state <= Rwin;
                     else
-                        current_state <= R5;
+                        ping <= ping(0) & ping(7 downto 1);
                     end if;
-                when  R5    =>
-                    ping <= "00000100";
+                when Lhit =>
                     if sw1 = '1' then
-                        current_state <= Rwin;
+                        current_state <= L0;
                     else
-                        current_state <= R6;
-                    end if;
-                when  R6    =>
-                    ping <= "00000010";
-                    if sw1 = '1' then
+                        ping <= "00000000";
                         current_state <= Rwin;
-                    else
-                        current_state <= R7;
                     end if;
-                when  R7    =>
-                    ping <= "00000001";
-                    current_state <= Lhit;
             end case;
         end if;
     end process;
@@ -197,6 +149,4 @@ architecture Behavioral of game is
             "0011000" when "1001",
             "1111111" when others;
             
-
-
 end Behavioral;
