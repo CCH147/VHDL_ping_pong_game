@@ -196,5 +196,6 @@ architecture Behavioral of game is
             "0000000" when "1000",
             "0011000" when "1001",
             "1111111" when others;
-           
+        
+        
 end Behavioral;

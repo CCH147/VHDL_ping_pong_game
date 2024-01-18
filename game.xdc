@@ -5,6 +5,7 @@ set_property -dict {PACKAGE_PIN F22 IOSTANDARD LVCMOS25}   [get_ports {Rst}]
 set_property -dict {PACKAGE_PIN T18 IOSTANDARD LVCMOS25}   [get_ports {sw1}]
 set_property -dict {PACKAGE_PIN P16 IOSTANDARD LVCMOS25}   [get_ports {sw2}]
 
+
 set_property -dict {PACKAGE_PIN U14 IOSTANDARD LVCMOS25}   [get_ports {LED[0]}]
 set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS25}   [get_ports {LED[1]}]
 set_property -dict {PACKAGE_PIN W22 IOSTANDARD LVCMOS25}   [get_ports {LED[2]}]
