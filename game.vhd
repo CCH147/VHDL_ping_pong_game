@@ -2,6 +2,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use IEEE.numeric_std.all;
 
 
 entity game is
@@ -53,7 +54,7 @@ architecture Behavioral of game is
             if  (sw2 = '1') then
                 current_state <= Rserve;
             end if;
-        elsif (rising_edge(fclk) and Rst = '0' ) then
+        elsif ( fclk 'event and fclk = '1') then
             case current_state is
                 when Lserve =>
                     if sw1 = '1' then 
@@ -81,7 +82,8 @@ architecture Behavioral of game is
                     Lscore <= Lscore + 1;
                     if Lscore = "0011" then
                         ping <= "00001111";
-                    else
+                    else      
+                        ping <= "00000000";
                         current_state <= Rserve;
                     end if;
                 when Rwin =>
@@ -89,6 +91,7 @@ architecture Behavioral of game is
                     if Rscore = "0011" then
                         ping <= "11110000";
                     else
+                        ping <= "00000000";
                         current_state <= Lserve;
                     end if;
                 when  L0    =>
@@ -105,13 +108,25 @@ architecture Behavioral of game is
                     current_state <= L4;
                 when  L4   =>
                     ping <= "00010000";
-                    current_state <= L5;
+                    if sw2 = '1' then
+                        current_state <= Lwin;
+                    else
+                        current_state <= L5;
+                    end if;
                 when  L5    =>
                     ping <= "00100000";
-                    current_state <= L6;
+                    if sw2 = '1' then
+                        current_state <= Lwin;
+                    else
+                        current_state <= L6;
+                    end if;
                 when  L6    =>
                     ping <= "01000000";
-                    current_state <= L7;
+                    if sw2 = '1' then
+                        current_state <= Lwin;
+                    else
+                        current_state <= L7;
+                    end if;
                 when  L7    =>
                     ping <= "10000000";
                     current_state <= Rhit;
@@ -129,13 +144,25 @@ architecture Behavioral of game is
                     current_state <= R4;
                 when  R4   =>
                     ping <= "00001000";
-                    current_state <= R5;
+                    if sw1 = '1' then
+                        current_state <= Rwin;
+                    else
+                        current_state <= R5;
+                    end if;
                 when  R5    =>
                     ping <= "00000100";
-                    current_state <= R6;
+                    if sw1 = '1' then
+                        current_state <= Rwin;
+                    else
+                        current_state <= R6;
+                    end if;
                 when  R6    =>
                     ping <= "00000010";
-                    current_state <= R7;
+                    if sw1 = '1' then
+                        current_state <= Rwin;
+                    else
+                        current_state <= R7;
+                    end if;
                 when  R7    =>
                     ping <= "00000001";
                     current_state <= Lhit;
